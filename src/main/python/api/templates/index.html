@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aistocktrack - Merchandise Inventory Tracker</title>
+    <meta name="description" content="Track merchandise inventory, prices, and availability for Pop Mart figures and Pokémon trading cards">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .hero-section {
+            padding: 4rem 0;
+            color: white;
+            text-align: center;
+        }
+        
+        .brand-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .brand-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .brand-card-body {
+            padding: 2rem;
+        }
+        
+        .brand-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .pop-mart-theme {
+            background: linear-gradient(135deg, #FF6B9D, #4ECDC4);
+        }
+        
+        .pokemon-theme {
+            background: linear-gradient(135deg, #FFCB05, #3B4CCA);
+        }
+        
+        .features-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .feature-item {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            color: #FFE66D;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <h1 class="display-3 fw-bold mb-4">
+                <i class="fas fa-chart-line me-3"></i>
+                aistocktrack
+            </h1>
+            <p class="lead mb-5">Track merchandise inventory, prices, and availability across multiple retailers</p>
+            
+            <!-- Brand Selection -->
+            <div class="row justify-content-center">
+                <div class="col-md-5 mb-4">
+                    <a href="{{ url_for('brand_home', brand_type='pop_mart') }}" class="brand-card d-block">
+                        <div class="pop-mart-theme text-white p-4">
+                            <div class="brand-icon">
+                                <i class="fas fa-cube"></i>
+                            </div>
+                            <h3 class="fw-bold">Pop Mart Tracker</h3>
+                            <p class="mb-0">Track blind box figures, limited editions, and restocks</p>
+                        </div>
+                        <div class="brand-card-body">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="fw-bold text-primary">50+</div>
+                                    <small class="text-muted">Figures</small>
+                                </div>
+                                <div class="col-4">
+                                    <div class="fw-bold text-success">15</div>
+                                    <small class="text-muted">In Stock</small>
+                                </div>
+                                <div class="col-4">
+                                    <div class="fw-bold text-warning">5</div>
+                                    <small class="text-muted">On Sale</small>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center justify-content-center mt-3">
+                                <span class="fw-bold text-primary">Enter Pop Mart Store</span>
+                                <i class="fas fa-arrow-right ms-2"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                
+                <div class="col-md-5 mb-4">
+                    <a href="{{ url_for('brand_home', brand_type='pokemon') }}" class="brand-card d-block">
+                        <div class="pokemon-theme text-white p-4">
+                            <div class="brand-icon">
+                                <i class="fas fa-magic"></i>
+                            </div>
+                            <h3 class="fw-bold">Pokémon Card Tracker</h3>
+                            <p class="mb-0">Track booster packs, boxes, and rare card deals</p>
+                        </div>
+                        <div class="brand-card-body">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="fw-bold text-primary">30+</div>
+                                    <small class="text-muted">Products</small>
+                                </div>
+                                <div class="col-4">
+                                    <div class="fw-bold text-success">20</div>
+                                    <small class="text-muted">Available</small>
+                                </div>
+                                <div class="col-4">
+                                    <div class="fw-bold text-warning">3</div>
+                                    <small class="text-muted">Deals</small>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center justify-content-center mt-3">
+                                <span class="fw-bold text-primary">Browse Pokémon Cards</span>
+                                <i class="fas fa-arrow-right ms-2"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Features Section -->
+        <div class="features-section text-white">
+            <h2 class="text-center mb-4">Why Choose aistocktrack?</h2>
+            <div class="row">
+                <div class="col-md-3 feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-sync-alt"></i>
+                    </div>
+                    <h5>Real-time Updates</h5>
+                    <p>Get notified instantly when items come back in stock or prices drop</p>
+                </div>
+                <div class="col-md-3 feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-tags"></i>
+                    </div>
+                    <h5>Price Tracking</h5>
+                    <p>Monitor price changes across multiple retailers and catch the best deals</p>
+                </div>
+                <div class="col-md-3 feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <h5>Smart Alerts</h5>
+                    <p>Set custom alerts for specific items, prices, or stock levels</p>
+                </div>
+                <div class="col-md-3 feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h5>Mobile Friendly</h5>
+                    <p>Access your tracked items anywhere with our responsive design</p>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <a href="/api/health" class="btn btn-outline-light me-3">
+                    <i class="fas fa-heartbeat me-2"></i>API Status
+                </a>
+                <a href="https://github.com/Lela-land/aistocktrack" class="btn btn-outline-light" target="_blank">
+                    <i class="fab fa-github me-2"></i>View on GitHub
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Add some interactive elements
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate counters
+            const counters = document.querySelectorAll('.fw-bold');
+            counters.forEach(counter => {
+                const target = parseInt(counter.innerText);
+                let current = 0;
+                const increment = target / 20;
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= target) {
+                        current = target;
+                        clearInterval(timer);
+                    }
+                    counter.innerText = Math.floor(current);
+                }, 50);
+            });
+            
+            // Add hover effects
+            const brandCards = document.querySelectorAll('.brand-card');
+            brandCards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-10px) scale(1.02)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

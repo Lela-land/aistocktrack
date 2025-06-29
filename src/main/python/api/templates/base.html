@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ get_brand_theme(brand_type).display_name }}{% endblock %}</title>
+    
+    <!-- Meta tags -->
+    <meta name="description" content="{% block description %}{{ get_brand_theme(brand_type).meta_description }}{% endblock %}">
+    <meta name="keywords" content="{% block keywords %}{{ get_brand_theme(brand_type).meta_keywords | join(', ') }}{% endblock %}">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{{ get_brand_theme(brand_type).assets.favicon_url }}" type="image/x-icon">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            {% set theme = get_brand_theme(brand_type) %}
+            {% for key, value in theme.colors.items() %}
+            {{ key }}: {{ value }};
+            {% endfor %}
+            {% for key, value in theme.typography.items() %}
+            {{ key }}: {{ value }};
+            {% endfor %}
+        }
+        
+        body {
+            font-family: var(--font-family-primary);
+            color: var(--color-text);
+            background-color: var(--color-background);
+            {% if theme.assets.background_pattern %}
+            background-image: url('{{ theme.assets.background_pattern }}');
+            background-repeat: repeat;
+            background-size: 200px;
+            {% endif %}
+        }
+        
+        .navbar-brand {
+            font-family: var(--font-family-secondary);
+            font-weight: bold;
+        }
+        
+        .brand-primary {
+            color: var(--color-primary) !important;
+        }
+        
+        .bg-brand-primary {
+            background-color: var(--color-primary) !important;
+        }
+        
+        .btn-brand-primary {
+            background-color: var(--color-primary);
+            border-color: var(--color-primary);
+            color: white;
+        }
+        
+        .btn-brand-primary:hover {
+            background-color: var(--color-secondary);
+            border-color: var(--color-secondary);
+            color: white;
+        }
+        
+        .card {
+            border: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        
+        .product-card {
+            height: 100%;
+        }
+        
+        .product-image {
+            height: 200px;
+            object-fit: cover;
+            background-color: #f8f9fa;
+        }
+        
+        .price {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        
+        .price-original {
+            text-decoration: line-through;
+            color: var(--color-text-secondary);
+            font-size: 0.9em;
+        }
+        
+        .discount-badge {
+            background-color: var(--color-accent);
+            color: var(--color-text);
+        }
+        
+        .stock-in {
+            color: var(--color-success);
+        }
+        
+        .stock-low {
+            color: var(--color-warning);
+        }
+        
+        .stock-out {
+            color: var(--color-error);
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: white;
+            padding: 4rem 0;
+        }
+        
+        .footer {
+            background-color: var(--color-text);
+            color: var(--color-background);
+            margin-top: 3rem;
+        }
+        
+        .search-bar {
+            border-radius: 25px;
+            border: 2px solid var(--color-primary);
+        }
+        
+        .search-bar:focus {
+            border-color: var(--color-secondary);
+            box-shadow: 0 0 0 0.2rem rgba(var(--color-primary), 0.25);
+        }
+        
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 2rem 0;
+            }
+            
+            .product-image {
+                height: 150px;
+            }
+        }
+    </style>
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('brand_home', brand_type=brand_type) }}">
+                {% set theme = get_brand_theme(brand_type) %}
+                <img src="{{ theme.assets.logo_url }}" alt="Logo" height="40" class="me-2" onerror="this.style.display='none'">
+                <span class="brand-primary">{{ theme.display_name }}</span>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('brand_home', brand_type=brand_type) }}">
+                            <i class="fas fa-home me-1"></i>Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('brand_products', brand_type=brand_type) }}">
+                            <i class="fas fa-box me-1"></i>All {{ theme.product_term.title() }}s
+                        </a>
+                    </li>
+                    {% if theme.enable_wishlist %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="toggleWishlist()">
+                            <i class="fas fa-heart me-1"></i>Wishlist
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+                
+                <!-- Search form -->
+                <form class="d-flex me-3" method="GET" action="{{ url_for('brand_products', brand_type=brand_type) }}">
+                    <input class="form-control search-bar me-2" type="search" name="search" 
+                           placeholder="Search {{ theme.product_term }}s..." value="{{ request.args.get('search', '') }}">
+                    <button class="btn btn-brand-primary" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+                
+                <!-- Brand switcher -->
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        Switch Brand
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('brand_home', brand_type='pop_mart') }}">
+                            <i class="fas fa-cube me-2"></i>Pop Mart
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('brand_home', brand_type='pokemon') }}">
+                            <i class="fas fa-magic me-2"></i>Pokémon Cards
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>{{ get_brand_theme(brand_type).display_name }}</h5>
+                    <p class="mb-1">{{ get_brand_theme(brand_type).tagline }}</p>
+                    <small class="text-muted">Track prices and availability across multiple retailers</small>
+                </div>
+                <div class="col-md-3">
+                    <h6>Quick Links</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="{{ url_for('brand_home', brand_type=brand_type) }}" class="text-light">Home</a></li>
+                        <li><a href="{{ url_for('brand_products', brand_type=brand_type) }}" class="text-light">Products</a></li>
+                        <li><a href="/api/health" class="text-light">API Status</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6>Connect</h6>
+                    <div class="d-flex">
+                        <a href="#" class="text-light me-3"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-light me-3"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-light me-3"><i class="fab fa-discord"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-3">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <small>&copy; 2024 aistocktrack. Built with Flask & Bootstrap.</small>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <small>Data updates every 15 minutes</small>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+        // Wishlist functionality
+        let wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+        
+        function toggleWishlist() {
+            // Simple wishlist toggle - could be expanded
+            alert('Wishlist feature coming soon!');
+        }
+        
+        function addToWishlist(productId) {
+            if (!wishlist.includes(productId)) {
+                wishlist.push(productId);
+                localStorage.setItem('wishlist', JSON.stringify(wishlist));
+                updateWishlistUI(productId, true);
+            }
+        }
+        
+        function removeFromWishlist(productId) {
+            wishlist = wishlist.filter(id => id !== productId);
+            localStorage.setItem('wishlist', JSON.stringify(wishlist));
+            updateWishlistUI(productId, false);
+        }
+        
+        function updateWishlistUI(productId, isInWishlist) {
+            const buttons = document.querySelectorAll(`[data-product-id="${productId}"]`);
+            buttons.forEach(btn => {
+                if (isInWishlist) {
+                    btn.innerHTML = '<i class="fas fa-heart"></i>';
+                    btn.classList.remove('btn-outline-danger');
+                    btn.classList.add('btn-danger');
+                } else {
+                    btn.innerHTML = '<i class="far fa-heart"></i>';
+                    btn.classList.remove('btn-danger');
+                    btn.classList.add('btn-outline-danger');
+                }
+            });
+        }
+        
+        // Initialize wishlist UI on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            wishlist.forEach(productId => {
+                updateWishlistUI(productId, true);
+            });
+        });
+        
+        // Auto-refresh for stock updates (every 5 minutes)
+        setTimeout(() => {
+            if (window.location.pathname.includes('/product/')) {
+                location.reload();
+            }
+        }, 300000);
+    </script>
+    
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

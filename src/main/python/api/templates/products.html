@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+
+{% block title %}{{ get_brand_theme(brand_type).display_name }} - All Products{% endblock %}
+
+{% block content %}
+{% set theme = get_brand_theme(brand_type) %}
+
+<div class="container py-4">
+    <!-- Page Header -->
+    <div class="row align-items-center mb-4">
+        <div class="col-md-6">
+            <h1 class="h2 mb-0">All {{ theme.product_term.title() }}s</h1>
+            <p class="text-muted">{{ products|length }} {{ theme.product_term }}s found</p>
+        </div>
+        <div class="col-md-6 text-md-end">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-secondary" id="gridView">
+                    <i class="fas fa-th"></i>
+                </button>
+                <button type="button" class="btn btn-outline-secondary" id="listView">
+                    <i class="fas fa-list"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <!-- Search -->
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">Search</label>
+                            <input type="text" class="form-control" id="search" name="search" 
+                                   value="{{ current_search }}" placeholder="Search {{ theme.product_term }}s...">
+                        </div>
+                        
+                        <!-- Category -->
+                        <div class="col-md-3">
+                            <label for="category" class="form-label">Category</label>
+                            <select class="form-select" id="category" name="category">
+                                <option value="">All Categories</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat }}" {% if cat == current_category %}selected{% endif %}>
+                                    {% if theme.category_labels.get(cat) %}
+                                        {{ theme.category_labels[cat] }}
+                                    {% else %}
+                                        {{ cat.title() }}
+                                    {% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Sort -->
+                        <div class="col-md-3">
+                            <label for="sort" class="form-label">Sort By</label>
+                            <select class="form-select" id="sort" name="sort">
+                                <option value="name" {% if current_sort == 'name' %}selected{% endif %}>Name A-Z</option>
+                                <option value="price" {% if current_sort == 'price' %}selected{% endif %}>Price Low-High</option>
+                                <option value="price_desc" {% if current_sort == 'price_desc' %}selected{% endif %}>Price High-Low</option>
+                                <option value="stock_level" {% if current_sort == 'stock_level' %}selected{% endif %}>Stock Level</option>
+                                <option value="last_updated" {% if current_sort == 'last_updated' %}selected{% endif %}>Recently Updated</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Submit -->
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-brand-primary w-100">
+                                <i class="fas fa-filter me-1"></i>Filter
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Active Filters -->
+    {% if current_search or current_category %}
+    <div class="mb-3">
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <span class="text-muted">Active filters:</span>
+            {% if current_search %}
+            <span class="badge bg-secondary">
+                Search: "{{ current_search }}"
+                <a href="{{ url_for('brand_products', brand_type=brand_type, category=current_category, sort=current_sort) }}" 
+                   class="text-white ms-1">×</a>
+            </span>
+            {% endif %}
+            {% if current_category %}
+            <span class="badge bg-secondary">
+                Category: {{ theme.category_labels.get(current_category, current_category.title()) }}
+                <a href="{{ url_for('brand_products', brand_type=brand_type, search=current_search, sort=current_sort) }}" 
+                   class="text-white ms-1">×</a>
+            </span>
+            {% endif %}
+            <a href="{{ url_for('brand_products', brand_type=brand_type) }}" class="btn btn-sm btn-outline-secondary">
+                Clear All
+            </a>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Products Grid -->
+    <div id="productsContainer">
+        {% if products %}
+        <div class="row" id="productGrid">
+            {% for product in products %}
+            <div class="col-lg-{{ 12 // theme.grid_columns }} col-md-6 mb-4 product-item">
+                <div class="card product-card h-100">
+                    <div class="position-relative">
+                        <img src="{{ product.image_url }}" class="card-img-top product-image" 
+                             alt="{{ product.name }}" onerror="this.src='{{ theme.assets.placeholder_image }}'">
+                        
+                        {% if product.is_on_sale %}
+                        <span class="badge discount-badge position-absolute top-0 end-0 m-2">
+                            -{{ product.discount_percentage }}%
+                        </span>
+                        {% endif %}
+                        
+                        <button class="btn btn-outline-danger btn-sm position-absolute top-0 start-0 m-2" 
+                                data-product-id="{{ product.id }}" onclick="toggleWishlistItem('{{ product.id }}')">
+                            <i class="far fa-heart"></i>
+                        </button>
+                        
+                        <!-- Quick actions overlay -->
+                        <div class="position-absolute bottom-0 start-0 end-0 p-2 product-overlay">
+                            <div class="d-flex gap-1">
+                                <a href="{{ url_for('product_detail', brand_type=brand_type, product_id=product.id) }}" 
+                                   class="btn btn-sm btn-brand-primary flex-grow-1">
+                                    View Details
+                                </a>
+                                {% if product.stock_status == 'in_stock' %}
+                                <a href="{{ product.purchase_link }}" target="_blank" 
+                                   class="btn btn-sm btn-success">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body d-flex flex-column">
+                        <h6 class="card-title">{{ product.name }}</h6>
+                        <p class="card-text text-muted small">{{ product.source }}</p>
+                        
+                        {% if product.description %}
+                        <p class="card-text small text-muted flex-grow-1">
+                            {{ product.description[:100] }}{% if product.description|length > 100 %}...{% endif %}
+                        </p>
+                        {% endif %}
+                        
+                        <div class="mb-2">
+                            <span class="price brand-primary fw-bold">{{ product.price | currency }}</span>
+                            {% if product.original_price and product.is_on_sale %}
+                            <span class="price-original ms-2">{{ product.original_price | currency }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-2">
+                            <small class="{{ product.stock_status | stock_class }}">
+                                <i class="fas fa-circle me-1"></i>{{ product.availability_text }}
+                            </small>
+                        </div>
+                        
+                        {% if product.tags %}
+                        <div class="mb-2">
+                            {% for tag in product.tags[:3] %}
+                            <span class="badge bg-light text-dark me-1">{{ tag }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mt-auto">
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                Updated {{ product.last_updated.strftime('%m/%d %H:%M') }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if products|length >= 24 %}
+        <nav aria-label="Product pagination">
+            <ul class="pagination justify-content-center">
+                <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('brand_products', brand_type=brand_type, 
+                        search=current_search, category=current_category, sort=current_sort, page=page-1) }}">
+                        Previous
+                    </a>
+                </li>
+                
+                {% for p in range(max(1, page-2), min(page+3, 6)) %}
+                <li class="page-item {% if p == page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('brand_products', brand_type=brand_type, 
+                        search=current_search, category=current_category, sort=current_sort, page=p) }}">
+                        {{ p }}
+                    </a>
+                </li>
+                {% endfor %}
+                
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('brand_products', brand_type=brand_type, 
+                        search=current_search, category=current_category, sort=current_sort, page=page+1) }}">
+                        Next
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+        
+        {% else %}
+        <!-- No products found -->
+        <div class="text-center py-5">
+            <div class="display-1 text-muted mb-3">
+                <i class="fas fa-search"></i>
+            </div>
+            <h3>No {{ theme.product_term }}s found</h3>
+            <p class="text-muted">Try adjusting your search or filter criteria</p>
+            <a href="{{ url_for('brand_products', brand_type=brand_type) }}" class="btn btn-brand-primary">
+                View All {{ theme.product_term.title() }}s
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Quick View Modal -->
+<div class="modal fade" id="quickViewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Quick View</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="quickViewContent">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<style>
+    .product-overlay {
+        background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .product-card:hover .product-overlay {
+        opacity: 1;
+    }
+    
+    .list-view .product-item {
+        width: 100%;
+    }
+    
+    .list-view .card {
+        flex-direction: row;
+    }
+    
+    .list-view .product-image {
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+    
+    .list-view .card-body {
+        flex-grow: 1;
+    }
+    
+    @media (max-width: 768px) {
+        .list-view .card {
+            flex-direction: column;
+        }
+        
+        .list-view .product-image {
+            width: 100%;
+            height: 200px;
+        }
+    }
+</style>
+
+<script>
+    // View toggle
+    document.getElementById('gridView').addEventListener('click', function() {
+        document.getElementById('productsContainer').classList.remove('list-view');
+        this.classList.add('btn-secondary');
+        this.classList.remove('btn-outline-secondary');
+        document.getElementById('listView').classList.add('btn-outline-secondary');
+        document.getElementById('listView').classList.remove('btn-secondary');
+        localStorage.setItem('viewMode', 'grid');
+    });
+    
+    document.getElementById('listView').addEventListener('click', function() {
+        document.getElementById('productsContainer').classList.add('list-view');
+        this.classList.add('btn-secondary');
+        this.classList.remove('btn-outline-secondary');
+        document.getElementById('gridView').classList.add('btn-outline-secondary');
+        document.getElementById('gridView').classList.remove('btn-secondary');
+        localStorage.setItem('viewMode', 'list');
+    });
+    
+    // Restore view mode
+    const savedViewMode = localStorage.getItem('viewMode');
+    if (savedViewMode === 'list') {
+        document.getElementById('listView').click();
+    }
+    
+    // Wishlist functionality
+    function toggleWishlistItem(productId) {
+        const btn = document.querySelector(`[data-product-id="${productId}"]`);
+        const isInWishlist = btn.classList.contains('btn-danger');
+        
+        if (isInWishlist) {
+            removeFromWishlist(productId);
+        } else {
+            addToWishlist(productId);
+        }
+    }
+    
+    // Infinite scroll (optional enhancement)
+    let isLoading = false;
+    window.addEventListener('scroll', function() {
+        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 1000 && !isLoading) {
+            // Load more products
+            console.log('Load more products...');
+        }
+    });
+    
+    // Auto-submit form on filter change
+    document.getElementById('category').addEventListener('change', function() {
+        this.form.submit();
+    });
+    
+    document.getElementById('sort').addEventListener('change', function() {
+        this.form.submit();
+    });
+    
+    // Search with debounce
+    let searchTimeout;
+    document.getElementById('search').addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            if (this.value.length >= 3 || this.value.length === 0) {
+                this.form.submit();
+            }
+        }, 500);
+    });
+</script>
+{% endblock %}
